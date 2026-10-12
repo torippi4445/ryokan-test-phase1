@@ -1,0 +1,20 @@
+{
+  "name": "美濃屋旅館",
+  "nameEn": "Minoya Ryokan",
+  "location": "岐阜県中津川市馬籠4567（中山道・馬籠宿）",
+  "locationEn": "4567 Magome, Nakatsugawa, Gifu (Magome-juku, Nakasendo)",
+  "rooms": 6,
+  "description": "中山道・馬籠宿にある築120年の家族経営の小さな旅館。全6室、夕食は飛騨牛と地のものを使った会席。",
+  "descriptionEn": "A 120-year-old family-run inn in Magome-juku on the historic Nakasendo trail. Six rooms, kaiseki dinner featuring Hida beef and local produce.",
+  "rates": {
+    "currency": "JPY",
+    "perPersonPerNightWithMeals": { "min": 13000, "max": 18000 },
+    "note": "1泊2食付き・1名あたりの目安。シーズン・部屋により変動。最終金額は要確認。",
+    "noteEn": "Per person, per night, including breakfast and dinner. Varies by season and room; final amount to be confirmed."
+  },
+  "operator": {
+    "name": "運用担当",
+    "deliveryEmail": "operator@example.com",
+    "note": "Stage 1 では女将ではなく運用者本人に届ける（一方向）。"
+  }
+}

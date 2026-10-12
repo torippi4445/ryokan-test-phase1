@@ -1,0 +1,113 @@
+{
+  "description": "問い合わせ種別 → 緑/黄/赤 のトリアージ表。分類は必ずこのカテゴリルールで行う（AIの自由判断は禁止）。1通が複数カテゴリに該当した場合は、最も保守的な色を採用する（RED > YELLOW > GREEN）。どのルールにも該当しない場合は default の RED にフォールバックする（迷ったら赤、SPEC安全ルール3）。",
+  "default": "RED",
+  "rules": [
+    {
+      "category": "parking",
+      "tier": "GREEN",
+      "descriptionJa": "駐車場の有無",
+      "faqCategory": "parking",
+      "keywords": ["parking", "park the car", "car park", "park my car", "where to park"]
+    },
+    {
+      "category": "checkin_time",
+      "tier": "GREEN",
+      "descriptionJa": "チェックイン時刻",
+      "faqCategory": "checkin",
+      "keywords": ["check-in", "check in", "checkin", "what time can we arrive", "arrival time", "what time should we arrive"]
+    },
+    {
+      "category": "checkout_time",
+      "tier": "GREEN",
+      "descriptionJa": "チェックアウト時刻",
+      "faqCategory": "checkout",
+      "keywords": ["check-out", "check out", "checkout", "what time do we leave", "what time is checkout"]
+    },
+    {
+      "category": "wifi",
+      "tier": "GREEN",
+      "descriptionJa": "Wi-Fi・インターネット",
+      "faqCategory": "wifi",
+      "keywords": ["wifi", "wi-fi", "wireless", "internet", "online"]
+    },
+    {
+      "category": "access",
+      "tier": "GREEN",
+      "descriptionJa": "アクセス・駅からの行き方",
+      "faqCategory": "access",
+      "keywords": ["how far", "from the station", "nearest station", "how to get", "how do we get", "directions", "walk from", "from nagoya", "from tokyo", "by bus", "by train"]
+    },
+    {
+      "category": "amenities",
+      "tier": "GREEN",
+      "descriptionJa": "設備・アメニティ一般",
+      "faqCategory": "amenities",
+      "keywords": ["amenities", "yukata", "towel", "toothbrush", "what do you provide", "shared bath", "public bath"]
+    },
+
+    {
+      "category": "availability",
+      "tier": "YELLOW",
+      "descriptionJa": "特定日の空室確認（在庫が絡む）",
+      "faqCategory": null,
+      "keywords": ["available", "availability", "any room", "any rooms", "vacancy", "do you have a room", "free on", "open on", "still open"]
+    },
+    {
+      "category": "price_quote",
+      "tier": "YELLOW",
+      "descriptionJa": "料金・見積もり（金額が絡む）",
+      "faqCategory": null,
+      "keywords": ["price", "how much", "cost", "rate", "per night", "per person", "total for", "quote"]
+    },
+    {
+      "category": "meal_allergy",
+      "tier": "YELLOW",
+      "descriptionJa": "食事・アレルギー対応（約束が絡む）",
+      "faqCategory": null,
+      "keywords": ["allergy", "allergic", "gluten", "vegetarian", "vegan", "halal", "dietary", "can't eat", "cannot eat", "no pork", "no beef"]
+    },
+    {
+      "category": "booking_request",
+      "tier": "YELLOW",
+      "descriptionJa": "予約したいという申し出（在庫・約束が絡む）",
+      "faqCategory": null,
+      "keywords": ["i would like to book", "i want to book", "i'd like to reserve", "make a reservation", "can i book", "please reserve", "book a room", "reserve a room"]
+    },
+
+    {
+      "category": "accessibility",
+      "tier": "RED",
+      "descriptionJa": "車椅子・高齢者・身体配慮（個別事情）",
+      "faqCategory": null,
+      "keywords": ["wheelchair", "disabled", "disability", "elderly", "grandmother", "grandfather", "mobility", "can't walk", "cannot walk stairs", "accessible"]
+    },
+    {
+      "category": "reservation_change",
+      "tier": "RED",
+      "descriptionJa": "予約の変更・キャンセル（交渉・個別対応）",
+      "faqCategory": null,
+      "keywords": ["change my reservation", "change my booking", "modify my booking", "reschedule", "cancel my reservation", "cancel my booking", "change the date", "move my booking"]
+    },
+    {
+      "category": "late_arrival",
+      "tier": "RED",
+      "descriptionJa": "深夜・時間外の到着（イレギュラー）",
+      "faqCategory": null,
+      "keywords": ["after midnight", "late at night", "arrive late", "arriving late", "midnight", "very early in the morning", "late check-in", "arrive at night"]
+    },
+    {
+      "category": "complaint",
+      "tier": "RED",
+      "descriptionJa": "クレーム・返金（個別対応）",
+      "faqCategory": null,
+      "keywords": ["complaint", "disappointed", "refund", "unhappy", "not satisfied", "problem with", "terrible", "worst"]
+    },
+    {
+      "category": "negotiation",
+      "tier": "RED",
+      "descriptionJa": "値引き・交渉（個別判断）",
+      "faqCategory": null,
+      "keywords": ["discount", "negotiate", "special deal", "cheaper", "lower price", "best price"]
+    }
+  ]
+}

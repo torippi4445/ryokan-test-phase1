@@ -1,0 +1,119 @@
+{
+  "name": "旅館 Stage1 — メール→トリアージ→LINE",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1a35aae6-3ec6-445b-aa35-7cdd384af431",
+      "name": "▶ 手動実行（テスト）",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// n8n Code node「サンプル受信メール」 (Run Once for All Items)\n// IMAP を繋ぐ前のテスト用。本番では Email Trigger (IMAP) ノードに置き換える。\nconst emails = [\n  { id: \"mail-001\", from: \"john.weaver@example.com\", subject: \"Question about your inn\",\n    body: \"Hello, we are planning to hike the Nakasendo next month. Is there parking at your inn, and what time is check-in? Thank you!\" },\n  { id: \"mail-002\", from: \"noreply@booking.com\", subject: \"You have a new message from a guest - Booking.com\",\n    body: \"Dear Partner, you have received a new message from your guest Maria Lopez regarding booking 4412987:\\n\\n----\\nHi! Do you have any room available on December 24th for 2 people, 1 night? And how much would it be? We are very excited to visit Magome.\\n----\\n\\nPlease reply through the Booking.com extranet.\" },\n  { id: \"mail-003\", from: \"t.becker@example.de\", subject: \"Travelling with my grandmother\",\n    body: \"Good evening. I would like to stay with my grandmother who uses a wheelchair. Is your building OK for her? Are there many stairs? We really want to experience a traditional ryokan.\" },\n  { id: \"mail-004\", from: \"airbnb-guest@example.com\", subject: \"Re: Your Airbnb reservation - new message\",\n    body: \"Automated notification from Airbnb. Your guest wrote:\\n\\n\\\"Is there free Wi-Fi in the rooms? Also, do you provide yukata and towels? Thanks!\\\"\" },\n  { id: \"mail-005\", from: \"sophie.martin@example.fr\", subject: \"Dinner question\",\n    body: \"Hello, one of us is vegetarian and another has a gluten allergy. Can you prepare an allergy-friendly dinner for us? We would like to book for 2 nights in November.\" },\n  { id: \"mail-006\", from: \"dave.cooper@example.com\", subject: \"Late arrival\",\n    body: \"Our train is delayed and we will probably arrive after midnight. Is that OK? We don't want to cause trouble. Please let us know.\" },\n];\nreturn emails.map((e) => ({ json: e }));\n"
+      },
+      "id": "a430e1d0-bd86-4456-9d31-9d6b8bb362c7",
+      "name": "サンプル受信メール",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// n8n Code node「トリアージ + Claude(MOCK) + LINE文面」 (Run Once for All Items)\n// 入力: サンプル受信メール（または IMAP Email Trigger の出力を整形したもの）\n// 出力: lineText（女将のLINEへ送る日本語カード）と各種メタ情報\n// ※ data/*.json と src/*.ts のロジックを n8n 用に1ノードへ自己完結化したもの。\n// ※ Claudeはモック（決め打ちテンプレ）。自然文の本当の質は実API接続時に出る。\n\nconst FAQ_EN = {\n  parking: \"Yes, we have free parking for up to 3 cars, no reservation needed.\",\n  checkin: \"Check-in is from 3:00 PM to 6:00 PM. Please arrive by 6:00 PM.\",\n  checkout: \"Check-out is at 10:00 AM.\",\n  access: \"Nearest station is Nakatsugawa (JR Chuo Line); ~30 min by bus to Magome, then a 5-min walk.\",\n  wifi: \"Yes, free Wi-Fi is available in all rooms.\",\n  amenities: \"Each room has yukata, towels, toothbrush, and a tea set; shared hinoki bath.\",\n};\nconst RATE = { min: 13000, max: 18000, cur: \"JPY\" };\nconst DEFAULT_TIER = \"RED\";\nconst SEV = { GREEN: 0, YELLOW: 1, RED: 2 };\nconst TIER_JA = { GREEN: \"緑\", YELLOW: \"黄\", RED: \"赤\" };\nconst OTA = [\"booking.com\", \"airbnb\", \"expedia\", \"agoda\", \"rakuten travel\"];\nconst MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };\n\nconst RULES = [\n  { category: \"parking\", tier: \"GREEN\", ja: \"駐車場の有無\", faq: \"parking\", kw: [\"parking\", \"park the car\", \"car park\", \"park my car\"] },\n  { category: \"checkin_time\", tier: \"GREEN\", ja: \"チェックイン時刻\", faq: \"checkin\", kw: [\"check-in\", \"check in\", \"checkin\", \"arrival time\", \"what time can we arrive\"] },\n  { category: \"checkout_time\", tier: \"GREEN\", ja: \"チェックアウト時刻\", faq: \"checkout\", kw: [\"check-out\", \"check out\", \"checkout\"] },\n  { category: \"wifi\", tier: \"GREEN\", ja: \"Wi-Fi\", faq: \"wifi\", kw: [\"wifi\", \"wi-fi\", \"wireless\", \"internet\"] },\n  { category: \"access\", tier: \"GREEN\", ja: \"アクセス\", faq: \"access\", kw: [\"how far\", \"from the station\", \"nearest station\", \"how to get\", \"directions\", \"by bus\", \"by train\"] },\n  { category: \"amenities\", tier: \"GREEN\", ja: \"設備・アメニティ\", faq: \"amenities\", kw: [\"amenities\", \"yukata\", \"towel\", \"toothbrush\", \"shared bath\", \"public bath\"] },\n  { category: \"availability\", tier: \"YELLOW\", ja: \"空室確認\", faq: null, kw: [\"available\", \"availability\", \"any room\", \"vacancy\", \"free on\", \"open on\"] },\n  { category: \"price_quote\", tier: \"YELLOW\", ja: \"料金見積もり\", faq: null, kw: [\"price\", \"how much\", \"cost\", \"rate\", \"per night\", \"per person\"] },\n  { category: \"meal_allergy\", tier: \"YELLOW\", ja: \"食事・アレルギー対応\", faq: null, kw: [\"allergy\", \"allergic\", \"gluten\", \"vegetarian\", \"vegan\", \"halal\", \"dietary\"] },\n  { category: \"booking_request\", tier: \"YELLOW\", ja: \"予約申込\", faq: null, kw: [\"i would like to book\", \"make a reservation\", \"can i book\", \"reserve a room\", \"book a room\"] },\n  { category: \"accessibility\", tier: \"RED\", ja: \"車椅子・高齢者配慮\", faq: null, kw: [\"wheelchair\", \"disabled\", \"elderly\", \"grandmother\", \"grandfather\", \"mobility\", \"accessible\"] },\n  { category: \"reservation_change\", tier: \"RED\", ja: \"予約変更・キャンセル\", faq: null, kw: [\"change my reservation\", \"modify my booking\", \"reschedule\", \"cancel my reservation\", \"change the date\"] },\n  { category: \"late_arrival\", tier: \"RED\", ja: \"時間外の到着\", faq: null, kw: [\"after midnight\", \"late at night\", \"arrive late\", \"arriving late\", \"midnight\", \"late check-in\"] },\n  { category: \"complaint\", tier: \"RED\", ja: \"クレーム・返金\", faq: null, kw: [\"complaint\", \"disappointed\", \"refund\", \"unhappy\", \"not satisfied\", \"problem with\"] },\n  { category: \"negotiation\", tier: \"RED\", ja: \"値引き交渉\", faq: null, kw: [\"discount\", \"negotiate\", \"special deal\", \"cheaper\", \"best price\"] },\n];\n\nfunction detectChannel(from, subject) {\n  const f = (from || \"\").toLowerCase();\n  const s = (subject || \"\").toLowerCase();\n  return OTA.some((o) => f.includes(o) || s.includes(o)) ? \"ota\" : \"direct\";\n}\nfunction extractGuestName(from, body, channel) {\n  if (channel === \"direct\") return (from.split(\"@\")[0] || \"\").replace(/[._]/g, \" \") || null;\n  const m = body.match(/(?:from your guest|from guest|guest)\\s+([A-Z][a-z]+\\s+[A-Z][a-z]+)/);\n  return m ? m[1] : null;\n}\nfunction extractGuestMessage(body, channel) {\n  if (channel === \"direct\") return body.trim();\n  const fenced = body.match(/----\\s*([\\s\\S]*?)\\s*----/);\n  if (fenced) return fenced[1].trim();\n  const quoted = body.match(/(?:wrote|message)\\s*:\\s*\\n?\\s*\"?([\\s\\S]*?)\"?\\s*$/i);\n  if (quoted) return quoted[1].trim();\n  return body.trim();\n}\nfunction triage(text) {\n  const t = text.toLowerCase();\n  const matched = [];\n  for (const r of RULES) {\n    const hit = r.kw.find((k) => t.includes(k));\n    if (hit) matched.push(r);\n  }\n  if (matched.length === 0) return { tier: DEFAULT_TIER, matched: [], reason: \"未該当 → 既定RED（迷ったら赤）\" };\n  const tier = matched.reduce((w, m) => (SEV[m.tier] > SEV[w] ? m.tier : w), \"GREEN\");\n  return { tier, matched, reason: matched.map((m) => `${m.category}(${m.tier})`).join(\", \") };\n}\n\n// --- 詳細抽出（日付の和訳・人数・泊数） ---\nfunction extract(text) {\n  const det = {};\n  const d = text.match(/\\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\s+(\\d{1,2})(st|nd|rd|th)?/i);\n  if (d) { det.dateJa = `${MONTHS[d[1].toLowerCase()]}月${parseInt(d[2], 10)}日`; }\n  const p = text.match(/\\b(\\d+)\\s*(people|persons|adults|guests|pax)\\b/i);\n  if (p) det.people = parseInt(p[1], 10);\n  const n = text.match(/\\b(\\d+)\\s*nights?\\b/i);\n  if (n) det.nights = parseInt(n[1], 10);\n  return det;\n}\nfunction hintList(det) {\n  const h = [];\n  if (det.dateJa) h.push(`希望日 ${det.dateJa}`);\n  if (det.people) h.push(`${det.people}名`);\n  if (det.nights) h.push(`${det.nights}泊`);\n  return h;\n}\nfunction partyJa(det) {\n  let s = \"\";\n  if (det.people) s += `${det.people}名様`;\n  if (det.nights) s += `${det.nights}泊`;\n  return s || \"ご宿泊\";\n}\n\n// --- 「何を聞いているか」を自然な日本語の節にする ---\nfunction askClause(category, text, det) {\n  const t = text.toLowerCase();\n  switch (category) {\n    case \"parking\": return \"駐車場があるか\";\n    case \"checkin_time\": return \"チェックインの時刻\";\n    case \"checkout_time\": return \"チェックアウトの時刻\";\n    case \"wifi\": return \"客室でWi-Fiが使えるか\";\n    case \"access\": return \"駅からのアクセス・行き方\";\n    case \"amenities\": {\n      const it = [];\n      if (/yukata/.test(t)) it.push(\"浴衣\");\n      if (/towel/.test(t)) it.push(\"タオル\");\n      if (/toothbrush/.test(t)) it.push(\"歯ブラシ\");\n      return it.length ? `${it.join(\"・\")}など設備の有無` : \"館内設備・アメニティ\";\n    }\n    case \"availability\": return `${det.dateJa || \"ご希望日\"}に空室があるか`;\n    case \"price_quote\": return `${partyJa(det)}の料金`;\n    case \"meal_allergy\": {\n      const d = [];\n      if (/vegetarian/.test(t)) d.push(\"ベジタリアン\");\n      if (/vegan/.test(t)) d.push(\"ヴィーガン\");\n      if (/gluten/.test(t)) d.push(\"グルテンアレルギー\");\n      if (/halal/.test(t)) d.push(\"ハラル\");\n      return d.length ? `${d.join(\"・\")}に対応した夕食が可能か` : \"食事・アレルギーへの対応\";\n    }\n    case \"booking_request\": return \"予約を申し込みたい\";\n    case \"accessibility\": {\n      const who = /grandmother/.test(t) ? \"車椅子の祖母\" : /grandfather/.test(t) ? \"車椅子の祖父\" : /wheelchair/.test(t) ? \"車椅子の方\" : \"配慮が必要な方\";\n      return `${who}と一緒に宿泊できるか（段差・お風呂など）`;\n    }\n    case \"reservation_change\": return \"予約内容の変更・キャンセル\";\n    case \"late_arrival\": return /midnight/.test(t) ? \"深夜（24時以降）の到着でも問題ないか\" : \"時間外の到着でも問題ないか\";\n    case \"complaint\": return \"クレーム・返金に関するご連絡\";\n    case \"negotiation\": return \"料金の値引き交渉\";\n    default: return \"個別の確認が必要なご相談\";\n  }\n}\n\nfunction summaryJa(name, matched, det, text) {\n  const who = name ? `${name} 様` : \"海外のお客様\";\n  if (!matched.length) {\n    return `${who}より、定型カテゴリに当てはまらないお問い合わせです。内容をご確認のうえご対応ください。`;\n  }\n  const clauses = matched.map((m) => askClause(m.category, text, det));\n  const body = clauses.length === 1 ? clauses[0] : clauses.slice(0, -1).join(\"、\") + \"、および\" + clauses[clauses.length - 1];\n  const hints = hintList(det);\n  const hintStr = hints.length ? `（${hints.join(\" / \")}）` : \"\";\n  return `${who}より、${body}、というお問い合わせです${hintStr}。`;\n}\n\nfunction draftEn(name, tier, matched) {\n  if (tier === \"RED\") return null;\n  const parts = [name ? `Dear ${name},` : \"Dear guest,\", \"\", \"Thank you for your inquiry about Minoya Ryokan.\", \"\"];\n  for (const m of matched) {\n    if (m.faq && FAQ_EN[m.faq]) { parts.push(FAQ_EN[m.faq]); continue; }\n    if (m.category === \"availability\") parts.push(\"Let me check availability for your dates and confirm shortly.\");\n    else if (m.category === \"price_quote\") parts.push(`Our rate is about ${RATE.min.toLocaleString()}–${RATE.max.toLocaleString()} ${RATE.cur} per person per night incl. 2 meals; I will confirm the exact total.`);\n    else if (m.category === \"meal_allergy\") parts.push(\"Thank you for telling us about your dietary needs; we will do our best and confirm with our kitchen.\");\n    else if (m.category === \"booking_request\") parts.push(\"We'd be glad to welcome you. Please share your dates and number of guests so we can confirm.\");\n  }\n  parts.push(\"\", \"We look forward to welcoming you.\", \"Minoya Ryokan\");\n  return parts.join(\"\\n\");\n}\n\nfunction categoriesJa(matched, tier) {\n  const names = matched.length ? matched.map((m) => m.ja).join(\"・\") : \"定型外\";\n  return `${TIER_JA[tier]}（${names}）`;\n}\n\nfunction buildCard(e, channel, name, tier, summary, draftReply, matched) {\n  const head = { GREEN: \"🟢 自動送信\", YELLOW: \"🟡 要確認（承認待ち）\", RED: \"🔴 女将の判断が必要\" }[tier];\n  const chJa = channel === \"ota\" ? \"OTA通知\" : \"直メール\";\n  const L = [\n    `${head}　|　${chJa}・${e.id}`,\n    `👤 ${name ? name + \" 様\" : \"海外のお客様\"}`,\n    \"──────────────\",\n    \"📩 ご質問の要約\",\n    summary,\n    \"\",\n    `🏷 分類：${categoriesJa(matched, tier)}`,\n  ];\n  if (tier === \"GREEN\") L.push(\"→ FAQに基づき自動でお客様へ返信します（女将は事後確認のみ）。\");\n  else if (tier === \"YELLOW\") L.push(\"→ 下の返信案をご確認のうえ「OK」で送信してください。\");\n  else L.push(\"→ 個別のご事情です。日本語でご返信ください（AIは回答を作成しません）。\");\n  if (draftReply) {\n    L.push(\"──────────────\");\n    L.push(tier === \"GREEN\" ? \"✉️ お客様へ送信した返信（英語）\" : \"✏️ 返信下書き（英語・未送信）\");\n    L.push(draftReply);\n  }\n  return L.join(\"\\n\");\n}\n\nfunction process(e) {\n  const channel = detectChannel(e.from, e.subject);\n  const name = extractGuestName(e.from, e.body, channel);\n  const guestMessage = extractGuestMessage(e.body, channel);\n  const tr = triage(guestMessage);\n  const det = extract(guestMessage);\n  const japaneseSummary = summaryJa(name, tr.matched, det, guestMessage);\n  const draftReply = draftEn(name, tr.tier, tr.matched);\n  const lineText = buildCard(e, channel, name, tr.tier, japaneseSummary, draftReply, tr.matched);\n\n  return {\n    id: e.id, channel, tier: tr.tier, guestName: name, guestMessage,\n    japaneseSummary, reason: tr.reason, draftReply, lineText,\n  };\n}\n\nreturn $input.all().map((it) => ({ json: process(it.json) }));\n"
+      },
+      "id": "ec410fec-4dff-4ffd-8eb7-8f81997fef85",
+      "name": "トリアージ+Claude(MOCK)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/broadcast",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messages: [ { type: 'text', text: $json.lineText } ] }) }}",
+        "options": {}
+      },
+      "id": "274c5165-e053-4138-afea-fd6030e9aa84",
+      "name": "LINE ブロードキャスト",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "LINE Messaging API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "▶ 手動実行（テスト）": {
+      "main": [
+        [
+          {
+            "node": "サンプル受信メール",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "サンプル受信メール": {
+      "main": [
+        [
+          {
+            "node": "トリアージ+Claude(MOCK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "トリアージ+Claude(MOCK)": {
+      "main": [
+        [
+          {
+            "node": "LINE ブロードキャスト",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

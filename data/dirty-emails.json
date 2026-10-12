@@ -1,0 +1,44 @@
+[
+  {
+    "id": "real-01 (Booking: 本文に質問あり・定型文まみれ)",
+    "from": "noreply@mailing.booking.com",
+    "subject": "New message regarding booking 3892011 — Booking.com",
+    "body": "Booking.com\n\nYou have a new message from María González about reservation 3892011 (check-in 24 Dec 2026).\n\nHi, we will arrive around 11pm by car. Is late check-in possible and do you have parking? Thank you!\n\n--\nReply to this guest by logging in to the Extranet. Do not reply to this email address.\nManage your property: https://admin.booking.com\nYou are receiving this because you are a Booking.com partner.\n© 1996–2026 Booking.com™. All rights reserved.\nUnsubscribe | Privacy | Terms",
+    "expect": "黄/赤: 深夜到着＋駐車場。本文の質問だけ抽出してほしい（日付は捏造しない）"
+  },
+  {
+    "id": "real-02 (Agoda: 本文に質問が来ない=ログイン誘導のみ)",
+    "from": "messaging@agoda.com",
+    "subject": "You have a new guest message - Agoda",
+    "body": "Dear Partner,\n\nYou have received a new message from a guest for booking ID 884512290.\n\nTo read and reply to this message, please log in to YCS (Agoda Partner Hub).\n\nThis is an automated notification. Do not reply to this email.\nAgoda Company Pte. Ltd.",
+    "expect": "本文に質問が無い → 「Agodaにログインして確認」と案内（対応不能を正直に）"
+  },
+  {
+    "id": "real-03 (Booking: 予約確定通知=問い合わせではない)",
+    "from": "noreply@booking.com",
+    "subject": "Booking confirmed: 3892011, María González, 24-26 Dec",
+    "body": "New reservation confirmed!\n\nGuest: María González\nDates: 24 Dec 2026 – 26 Dec 2026 (2 nights)\nRoom: Japanese-style room, 2 guests\nPrice: ¥36,000 total\nFree cancellation until 21 Dec.\n\nNo action needed. Manage in the Extranet.",
+    "expect": "問い合わせではない（確定通知） → 振り分け対象外にしたい"
+  },
+  {
+    "id": "real-04 (直メール: 質問＋長い署名＋引用)",
+    "from": "thomas.muller@example.com",
+    "subject": "Re: Your inn",
+    "body": "Hello,\n\nDo you offer vegetarian dinner? My wife cannot eat meat or fish.\n\nBest regards,\nThomas Müller\nSent from my iPhone\n\nOn Mon, Jun 8, 2026, Minoya Ryokan wrote:\n> Thank you for your interest. Please let us know if you have any questions.\n> Parking is available and check-in is from 3pm.\n> Minoya Ryokan",
+    "expect": "黄: ベジタリアン夕食のみ。引用の parking/check-in を拾わない・日付を誤抽出しない"
+  },
+  {
+    "id": "real-05 (Expedia: レビュー依頼=宣伝、問い合わせではない)",
+    "from": "no-reply@expedia.com",
+    "subject": "How was your stay? Leave a review",
+    "body": "Thanks for hosting!\n\nGuests love reading reviews. Remind your guest to rate their stay.\nTip: properties with Wi-Fi and free parking get more bookings!\n\nExpedia Group Partner Central. Unsubscribe here.",
+    "expect": "問い合わせではない（宣伝） → 振り分け対象外にしたい"
+  },
+  {
+    "id": "real-06 (直メール: 多言語混在＋複数質問)",
+    "from": "sophie@example.fr",
+    "subject": "Question",
+    "body": "Bonjour! We plan to visit in November. Is there an elevator? My mother uses a wheelchair. Also, how much for 2 people 2 nights? Merci!",
+    "expect": "赤: 車椅子（個別配慮）が最優先。料金(黄)も混在 → 最も保守的=赤"
+  }
+]

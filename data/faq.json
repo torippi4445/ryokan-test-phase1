@@ -1,0 +1,44 @@
+[
+  {
+    "category": "parking",
+    "questionJa": "駐車場はありますか",
+    "answerJa": "はい、無料の駐車場が3台分ございます。事前予約は不要です。馬籠宿は坂道のため、宿の手前の市営駐車場もご利用いただけます。",
+    "answerEn": "Yes, we have free parking for up to 3 cars, no reservation needed. As Magome-juku is on a slope, the municipal car park just below the inn is also available."
+  },
+  {
+    "category": "checkin",
+    "questionJa": "チェックインは何時ですか",
+    "answerJa": "チェックインは15:00〜18:00です。夕食の準備の都合上、18:00までにお越しください。",
+    "answerEn": "Check-in is from 3:00 PM to 6:00 PM. Please arrive by 6:00 PM so we can prepare your dinner."
+  },
+  {
+    "category": "checkout",
+    "questionJa": "チェックアウトは何時ですか",
+    "answerJa": "チェックアウトは10:00です。",
+    "answerEn": "Check-out is at 10:00 AM."
+  },
+  {
+    "category": "access",
+    "questionJa": "駅からどのくらいですか / アクセス",
+    "answerJa": "最寄りはJR中央本線の中津川駅です。中津川駅から馬籠行きの路線バスで約30分、馬籠バス停から徒歩5分です。名古屋駅からは中津川駅まで特急で約50分です。",
+    "answerEn": "The nearest station is Nakatsugawa (JR Chuo Line). From Nakatsugawa Station, take the local bus to Magome (about 30 min), then a 5-minute walk from the Magome bus stop. From Nagoya Station, Nakatsugawa is about 50 minutes by limited express."
+  },
+  {
+    "category": "wifi",
+    "questionJa": "Wi-Fiはありますか",
+    "answerJa": "はい、館内全室で無料Wi-Fiをご利用いただけます。パスワードはチェックイン時にお渡しします。",
+    "answerEn": "Yes, free Wi-Fi is available in all rooms. We will give you the password at check-in."
+  },
+  {
+    "category": "amenities",
+    "questionJa": "設備・アメニティについて",
+    "answerJa": "浴衣・タオル・歯ブラシ・お茶セットを全室にご用意しています。お風呂は檜の共同風呂（時間帯で男女入替制）です。",
+    "answerEn": "Each room comes with yukata, towels, toothbrush, and a tea set. We have a shared hinoki (cypress) bath, alternating between men's and women's hours."
+  },
+  {
+    "category": "cancellation",
+    "questionJa": "キャンセルポリシー",
+    "answerJa": "キャンセル料は、3日前まで無料、2日前30%、前日50%、当日・無連絡100%です。",
+    "answerEn": "Cancellation fees: free up to 3 days before, 30% 2 days before, 50% the day before, and 100% on the day or for no-shows."
+  }
+]

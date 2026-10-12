@@ -1,0 +1,23 @@
+{
+  "name": "ryokan-inquiry-stage1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "小規模旅館向け 多言語問い合わせ自動対応システム — Stage 1（一方向パイプライン）",
+  "scripts": {
+    "start": "node src/stage2.ts",
+    "stage1": "node src/index.ts",
+    "stage2": "node src/stage2.ts",
+    "test:extract": "node --env-file=.env src/run-extract-test.ts",
+    "e2e": "node --env-file=.env src/run-e2e.ts",
+    "e2e:send": "node --env-file=.env src/run-e2e.ts --send",
+    "kb": "node --env-file=.env src/run-kb-test.ts"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
+    "nodemailer": "^8.0.11"
+  }
+}

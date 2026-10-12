@@ -1,0 +1,20 @@
+# 秘密情報（絶対にコミットしない）
+.env
+.env.*
+!.env.example
+
+# 依存とビルド成果物
+node_modules/
+
+# 実行時の生成物
+out/
+
+# 別プロジェクトのエージェント定義（このリポジトリとは無関係）
+.claude/agents/
+.codex/
+
+# OS
+.DS_Store
+
+# 原本zip（_spec/ に展開済み）
+旅館設計書

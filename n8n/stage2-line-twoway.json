@@ -1,0 +1,100 @@
+{
+  "name": "旅館 Stage2 — LINE双方向（翻訳+確認）",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "line-okami",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "6c85da40-f500-4d10-8e51-0353d36f6e58",
+      "name": "LINE Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "23cde2d5-b9fa-47b2-a72c-77d8079adbb3"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// n8n Code node「Stage2 双方向ステートマシン」 (Run Once for All Items)\n// 入力: LINE Webhook ノードの出力（$json.body.events）\n// 出力: { replyToken, lineText } を LINE reply ノードへ渡す（無ければ空 = 返信しない）\n//\n// 女将がボットにメッセージを送るたびに、組み込みの6件デモを1ステップずつ進める。\n// 緑=自動送信の通知 / 黄・赤=返信例を提示→女将が日本語で答える→翻訳→「送りますか?」\n// →「OK」で英訳を送信。状態は Workflow Static Data に保持（1人テスト想定）。\n\nconst QUEUE = [\n  { id: \"mail-001\", tier: \"GREEN\", summary: \"外国人のお客様：駐車場の有無、チェックイン時刻。\",\n    greenEn: \"Yes, we have free parking (up to 3 cars). Check-in is 3:00–6:00 PM.\" },\n  { id: \"mail-002\", tier: \"YELLOW\", summary: \"Maria Lopez 様：12/24の空室と料金（2名1泊）。\",\n    answerJa: \"12月24日は空いています。2名1泊で1名様18,000円、夕食は飛騨牛の会席です。\" },\n  { id: \"mail-003\", tier: \"RED\", summary: \"t becker 様：車椅子の祖母と宿泊可能か（段差・お風呂）。\",\n    answerJa: \"車椅子でも1階のお部屋でしたら段差なくご案内できます。お風呂は少し介助が必要ですが対応いたします。\" },\n  { id: \"mail-004\", tier: \"GREEN\", summary: \"外国人のお客様：Wi-Fiと浴衣・タオルの有無。\",\n    greenEn: \"Yes, free Wi-Fi in all rooms. Yukata, towels and a tea set are provided in every room.\" },\n  { id: \"mail-005\", tier: \"YELLOW\", summary: \"sophie martin 様：ベジタリアン＋グルテンアレルギー対応の夕食。\",\n    answerJa: \"ベジタリアンとグルテンアレルギー、どちらも対応できます。当日、念のため改めて確認させていただきます。\" },\n  { id: \"mail-006\", tier: \"RED\", summary: \"dave cooper 様：列車遅延で深夜到着になる。\",\n    answerJa: \"深夜のご到着で問題ございません。玄関の鍵の場所をご案内しますので、ご安心してお越しください。\" },\n];\n\nconst JA_TO_EN = {\n  \"12月24日は空いています。2名1泊で1名様18,000円、夕食は飛騨牛の会席です。\":\n    \"December 24th is available. For 2 guests for 1 night, it is 18,000 yen per person, and dinner is a Hida beef kaiseki course.\",\n  \"車椅子でも1階のお部屋でしたら段差なくご案内できます。お風呂は少し介助が必要ですが対応いたします。\":\n    \"If she uses a wheelchair, we can offer a ground-floor room with no steps. The bath needs a little assistance, but we are happy to help.\",\n  \"ベジタリアンとグルテンアレルギー、どちらも対応できます。当日、念のため改めて確認させていただきます。\":\n    \"We can accommodate both vegetarian and gluten-allergy needs. To be safe, we will confirm the details with you again on the day.\",\n  \"深夜のご到着で問題ございません。玄関の鍵の場所をご案内しますので、ご安心してお越しください。\":\n    \"Arriving after midnight is no problem at all. We will tell you where to find the entrance key, so please come with peace of mind.\",\n};\nfunction translate(ja) {\n  const t = JA_TO_EN[ja.trim()];\n  return t ? { text: t, isMock: false } : { text: `(mock未登録) ${ja}`, isMock: true };\n}\n\nconst sd = $getWorkflowStaticData(\"global\");\nif (typeof sd.idx !== \"number\") { sd.idx = 0; sd.stage = \"idle\"; sd.pending = null; }\n\nfunction badge(t) { return { GREEN: \"🟢\", YELLOW: \"🟡要確認\", RED: \"🔴女将判断\" }[t]; }\n\n// 現在の問い合わせを提示。緑は自動送信通知で即 idle のまま idx を進める。\nfunction present() {\n  if (sd.idx >= QUEUE.length) {\n    return \"✅ デモは以上です（6件）。『リセット』で最初から。\";\n  }\n  const item = QUEUE[sd.idx];\n  if (item.tier === \"GREEN\") {\n    sd.idx += 1; sd.stage = \"idle\";\n    return `${badge(item.tier)} ${item.summary}\\n🟢 自動送信しました：\\n${item.greenEn}\\n\\n（何か送ると次の問い合わせへ）`;\n  }\n  sd.stage = \"await_answer\";\n  return `${badge(item.tier)} ${item.summary}\\n\\n返信例（コピーして送信OK）：\\n${item.answerJa}\\n\\n→ 日本語で答えを送ってください。`;\n}\n\nfunction handle(text) {\n  const t = text.trim();\n  if (/^(リセット|reset)$/i.test(t)) {\n    sd.idx = 0; sd.stage = \"idle\"; sd.pending = null;\n    return \"🔄 リセットしました。何か送ると最初の問い合わせから始まります。\";\n  }\n  if (sd.stage === \"await_answer\") {\n    const { text: en, isMock } = translate(t);\n    sd.pending = { ja: t, en };\n    sd.stage = \"await_confirm\";\n    const warn = isMock ? \"\\n⚠️翻訳モック未登録（実APIでは正しく翻訳されます）\" : \"\";\n    return `お客様へ以下を送ります（英語に翻訳済み）。${warn}\\n元の日本語：${t}\\n\\n［英訳］\\n${en}\\n\\n送信しますか？「OK」/「やめる」`;\n  }\n  if (sd.stage === \"await_confirm\") {\n    const ok = /^(ok|はい|送る|送信)$/i.test(t);\n    const p = sd.pending; sd.pending = null; sd.idx += 1; sd.stage = \"idle\";\n    if (ok) return `✉️ 送信しました：\\n${p.en}\\n\\n（何か送ると次の問い合わせへ）`;\n    return \"🚫 送信をやめました。\\n\\n（何か送ると次の問い合わせへ）\";\n  }\n  // idle\n  return present();\n}\n\nconst items = $input.all();\nconst body = items.length ? (items[0].json.body || items[0].json) : {};\nconst events = (body && body.events) || [];\nconst out = [];\nfor (const ev of events) {\n  if (ev.type === \"message\" && ev.message && ev.message.type === \"text\" && ev.replyToken) {\n    out.push({ json: { replyToken: ev.replyToken, lineText: handle(ev.message.text) } });\n  }\n}\nreturn out; // 空配列なら返信ノードは動かない（Webスト検証の空イベント等）\n"
+      },
+      "id": "82f36092-230c-4b5c-b3a8-6979ebd8e691",
+      "name": "Stage2 ステートマシン",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ replyToken: $json.replyToken, messages: [ { type: 'text', text: $json.lineText } ] }) }}",
+        "options": {}
+      },
+      "id": "b8289b5b-4f33-4c0e-83d3-fdf8c0712fea",
+      "name": "LINE 返信(reply)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "LINE Messaging API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "LINE Webhook": {
+      "main": [
+        [
+          {
+            "node": "Stage2 ステートマシン",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage2 ステートマシン": {
+      "main": [
+        [
+          {
+            "node": "LINE 返信(reply)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

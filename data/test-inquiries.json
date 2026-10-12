@@ -1,0 +1,44 @@
+[
+  {
+    "id": "q1",
+    "note": "【full想定】単純だが、ナレッジには『3台・先着順・満車時は公共駐車場500円』まで書いてある",
+    "from": "john.weaver@example.com",
+    "subject": "Parking",
+    "body": "Hello, we are driving from Nagoya. Is there parking at your inn?"
+  },
+  {
+    "id": "q2",
+    "note": "【条件付き】20時到着。ナレッジは『18時超は要連絡・20時以降は原則お断り、応相談』",
+    "from": "dave.cooper@example.com",
+    "subject": "Late arrival",
+    "body": "Our train is delayed and we would arrive around 8pm. Is that OK?"
+  },
+  {
+    "id": "q3",
+    "note": "【複合】ベッドの有無＋足の悪い母。ナレッジは『全室和室・ベッド無し』『梅の間だけ段差なし』『エレベーター無し』",
+    "from": "sophie.martin@example.fr",
+    "subject": "Room question",
+    "body": "My mother has trouble walking and cannot sleep on a futon on the floor. Do you have rooms with beds, and is there an elevator?"
+  },
+  {
+    "id": "q4",
+    "note": "【none想定・重要】ペットについてナレッジに一切記載なし → でっち上げず女将へ回るべき",
+    "from": "anna.schmidt@example.de",
+    "subject": "Traveling with our dog",
+    "body": "We are traveling with a small dog. Is it possible to stay with a pet?"
+  },
+  {
+    "id": "q5",
+    "note": "【正直さ】ハラル。ナレッジは『ハラル不可。豚肉除去は可能』と正直に書いてある",
+    "from": "yusuf.rahman@example.com",
+    "subject": "Halal food",
+    "body": "Do you serve halal food? We cannot eat pork."
+  },
+  {
+    "id": "q6",
+    "note": "【計算力】11月=繁忙期、松の間、大人2+小学生1。表と繁忙期定義と子供料金70%を全部読む必要がある",
+    "from": "maria.lopez@example.es",
+    "subject": "Price for November",
+    "body": "How much would it be for 2 adults and one 9-year-old child, one night in mid-November? We would like the biggest room if possible."
+  }
+]
